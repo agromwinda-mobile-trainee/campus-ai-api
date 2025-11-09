@@ -6,9 +6,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 🧠 Choisis ici le modèle Hugging Face
-// Pour un bon équilibre entre rapidité et qualité :
+// 🧠 Modèle Hugging Face conseillé (bon équilibre français/rapidité)
 const HF_MODEL = "tiiuae/falcon-7b-instruct"; // ou "bigscience/bloomz-560m"
+
+// ⚠️ Nouvelle URL API Hugging Face (mise à jour 2025)
+const HF_API_URL = `https://router.huggingface.co/hf-inference/models/${HF_MODEL}`;
 
 app.post("/ask", async (req, res) => {
   try {
@@ -18,31 +20,31 @@ app.post("/ask", async (req, res) => {
       return res.status(400).json({ error: "Message vide" });
     }
 
-    // 🔥 Appel à Hugging Face Inference API
-    const response = await fetch(
-      `https://api-inference.huggingface.co/models/${HF_MODEL}`,
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${process.env.HF_API_KEY}`,
-          "Content-Type": "application/json",
+    // 🔥 Appel à Hugging Face Inference API (nouvelle version)
+    const response = await fetch(HF_API_URL, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.HF_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        inputs: `L'utilisateur dit : "${message}". 
+Réponds comme un assistant Campus France poli, professionnel et clair.`,
+        parameters: {
+          max_new_tokens: 200,
+          temperature: 0.6,
+          top_p: 0.9,
         },
-        body: JSON.stringify({
-          inputs: `L'utilisateur demande : "${message}". 
-Tu es un assistant Campus France professionnel et poli, aide l'étudiant de manière claire et concise.`,
-          parameters: { max_new_tokens: 150, temperature: 0.6 },
-        }),
-      }
-    );
+      }),
+    });
 
     const data = await response.json();
 
-    if (!response.ok || !data || !Array.isArray(data)) {
+    if (!response.ok || !Array.isArray(data)) {
       console.error("Erreur Hugging Face :", JSON.stringify(data));
       return res.status(500).json({ error: "Réponse invalide de l'IA" });
     }
 
-    // 🧩 Récupération du texte généré
     const reply = data[0]?.generated_text || "Je n’ai pas compris votre demande.";
 
     res.json({ response: reply });
@@ -54,4 +56,4 @@ Tu es un assistant Campus France professionnel et poli, aide l'étudiant de mani
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ Serveur IA lancé sur le port ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Serveur IA Campus France lancé sur le port ${PORT}`));
