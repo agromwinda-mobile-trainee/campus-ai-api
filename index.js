@@ -6,11 +6,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 🧠 Modèle Hugging Face conseillé (bon équilibre français/rapidité)
-const HF_MODEL = "tiiuae/falcon-7b-instruct"; // ou "bigscience/bloomz-560m"
+// 🧠 Choisis ton modèle (bon français, rapide, gratuit)
+const HF_MODEL = "tiiuae/falcon-7b-instruct"; // tu peux tester aussi "mistralai/Mistral-7B-Instruct-v0.2"
 
-// ⚠️ Nouvelle URL API Hugging Face (mise à jour 2025)
-const HF_API_URL = `https://router.huggingface.co/hf-inference/models/${HF_MODEL}`;
+// ✅ URL correcte pour la nouvelle API Hugging Face Router
+const HF_API_URL = `https://router.huggingface.co/hf-inference/${HF_MODEL}`;
 
 app.post("/ask", async (req, res) => {
   try {
@@ -20,7 +20,7 @@ app.post("/ask", async (req, res) => {
       return res.status(400).json({ error: "Message vide" });
     }
 
-    // 🔥 Appel à Hugging Face Inference API (nouvelle version)
+    // 🔥 Appel à l’API Hugging Face
     const response = await fetch(HF_API_URL, {
       method: "POST",
       headers: {
@@ -29,20 +29,28 @@ app.post("/ask", async (req, res) => {
       },
       body: JSON.stringify({
         inputs: `L'utilisateur dit : "${message}". 
-Réponds comme un assistant Campus France poli, professionnel et clair.`,
+Réponds comme un assistant Campus France professionnel, poli et clair.`,
         parameters: {
           max_new_tokens: 200,
           temperature: 0.6,
-          top_p: 0.9,
         },
       }),
     });
 
-    const data = await response.json();
+    // Vérifie si la réponse est bien JSON
+    const text = await response.text();
 
-    if (!response.ok || !Array.isArray(data)) {
-      console.error("Erreur Hugging Face :", JSON.stringify(data));
-      return res.status(500).json({ error: "Réponse invalide de l'IA" });
+    if (!response.ok) {
+      console.error("Erreur Hugging Face :", text);
+      return res.status(500).json({ error: `Erreur Hugging Face : ${text}` });
+    }
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.error("Réponse non JSON :", text);
+      return res.status(500).json({ error: "Réponse non JSON de Hugging Face" });
     }
 
     const reply = data[0]?.generated_text || "Je n’ai pas compris votre demande.";
