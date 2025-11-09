@@ -7,10 +7,10 @@ app.use(cors());
 app.use(express.json());
 
 // Modèle Hugging Face 
-const HF_MODEL = "mistralai/Mistral-7B-Instruct-v0.2"; 
+const HF_MODEL = "moonshotai/Kimi-K2-Instruct-0905"; 
 
 // ✅ Endpoint officiel de l'API Hugging Face
-const HF_API_URL = `https://router.huggingface.co/hf-inference/${HF_MODEL}`;
+const HF_API_URL = `https://router.huggingface.co/v1/${HF_MODEL}`;
 
 app.post("/ask", async (req, res) => {
   try {
