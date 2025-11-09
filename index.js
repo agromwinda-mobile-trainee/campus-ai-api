@@ -23,7 +23,7 @@ app.post("/ask", async (req, res) => {
       body: JSON.stringify({
         model: "llama-3.1-8b-instant",
         messages: [
-          { role: "system", content: "Tu es un assistant Campus France professionnel, poli et informatif." },
+          { role: "system", content: "Tu es un assistant Campus France RDC professionnel, poli et informatif." },
           { role: "user", content: message },
         ],
       }),
