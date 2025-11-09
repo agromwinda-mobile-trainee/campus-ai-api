@@ -6,36 +6,52 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("API Campus France IA est en ligne ✅");
-});
+// 🧠 Choisis ici le modèle Hugging Face
+// Pour un bon équilibre entre rapidité et qualité :
+const HF_MODEL = "tiiuae/falcon-7b-instruct"; // ou "bigscience/bloomz-560m"
 
 app.post("/ask", async (req, res) => {
   try {
     const { message } = req.body;
 
-    const r = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-3.5-turbo",
-        messages: [
-          { role: "system", content: "Tu es un assistant Campus France professionnel et bienveillant." },
-          { role: "user", content: message },
-        ],
-      }),
-    });
+    if (!message || message.trim() === "") {
+      return res.status(400).json({ error: "Message vide" });
+    }
 
-    const data = await r.json();
-    res.json({ response: data.choices[0].message.content });
-  } catch (err) {
-    console.error("Erreur:", err);
-    res.status(500).json({ error: "Erreur IA" });
+    // 🔥 Appel à Hugging Face Inference API
+    const response = await fetch(
+      `https://api-inference.huggingface.co/models/${HF_MODEL}`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.HF_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          inputs: `L'utilisateur demande : "${message}". 
+Tu es un assistant Campus France professionnel et poli, aide l'étudiant de manière claire et concise.`,
+          parameters: { max_new_tokens: 150, temperature: 0.6 },
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data || !Array.isArray(data)) {
+      console.error("Erreur Hugging Face :", JSON.stringify(data));
+      return res.status(500).json({ error: "Réponse invalide de l'IA" });
+    }
+
+    // 🧩 Récupération du texte généré
+    const reply = data[0]?.generated_text || "Je n’ai pas compris votre demande.";
+
+    res.json({ response: reply });
+
+  } catch (e) {
+    console.error("Erreur serveur :", e);
+    res.status(500).json({ error: "Erreur serveur interne" });
   }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ Serveur lancé sur le port ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Serveur IA lancé sur le port ${PORT}`));
