@@ -6,11 +6,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 🧠 Choisis ton modèle (bon français, rapide, gratuit)
-const HF_MODEL = "tiiuae/falcon-7b-instruct"; // tu peux tester aussi "mistralai/Mistral-7B-Instruct-v0.2"
+// Modèle Hugging Face 
+const HF_MODEL = "mistralai/Mistral-7B-Instruct-v0.2"; 
 
-// ✅ URL correcte pour la nouvelle API Hugging Face Router
-const HF_API_URL = `https://router.huggingface.co/hf-inference/${HF_MODEL}`;
+// ✅ Endpoint officiel de l'API Hugging Face
+const HF_API_URL = `https://api-inference.huggingface.co/models/${HF_MODEL}`;
 
 app.post("/ask", async (req, res) => {
   try {
