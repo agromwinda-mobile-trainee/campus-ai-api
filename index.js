@@ -7,7 +7,7 @@ app.use(cors());
 app.use(express.json());
 
 // Modèle Hugging Face 
-const HF_MODEL = "moonshotai/Kimi-K2-Instruct-0905"; 
+const HF_MODEL = "openai/gpt-oss-safeguard-20b"; 
 
 // ✅ Endpoint officiel de l'API Hugging Face
 const HF_API_URL = `https://router.huggingface.co/v1/${HF_MODEL}`;
@@ -29,7 +29,7 @@ app.post("/ask", async (req, res) => {
       },
       body: JSON.stringify({
         inputs: `L'utilisateur dit : "${message}". 
-Réponds comme un assistant Campus France professionnel, poli et clair.`,
+Réponds comme un assistant Campus France RDC professionnel, poli et clair.`,
         parameters: {
           max_new_tokens: 200,
           temperature: 0.6,
