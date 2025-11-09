@@ -6,12 +6,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Modèle Hugging Face 
-const HF_MODEL = "openai/gpt-oss-safeguard-20b"; 
-
-// ✅ Endpoint officiel de l'API Hugging Face
-const HF_API_URL = `https://router.huggingface.co/v1/${HF_MODEL}`;
-
 app.post("/ask", async (req, res) => {
   try {
     const { message } = req.body;
@@ -20,41 +14,29 @@ app.post("/ask", async (req, res) => {
       return res.status(400).json({ error: "Message vide" });
     }
 
-    // 🔥 Appel à l’API Hugging Face
-    const response = await fetch(HF_API_URL, {
+    const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.HF_API_KEY}`,
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        inputs: `L'utilisateur dit : "${message}". 
-Réponds comme un assistant Campus France RDC professionnel, poli et clair.`,
-        parameters: {
-          max_new_tokens: 200,
-          temperature: 0.6,
-        },
+        model: "mixtral-8x7b",
+        messages: [
+          { role: "system", content: "Tu es un assistant Campus France professionnel, poli et informatif." },
+          { role: "user", content: message },
+        ],
       }),
     });
 
-    // Vérifie si la réponse est bien JSON
-    const text = await response.text();
+    const data = await r.json();
 
-    if (!response.ok) {
-      console.error("Erreur Hugging Face :", text);
-      return res.status(500).json({ error: `Erreur Hugging Face : ${text}` });
+    if (!r.ok || !data.choices || data.choices.length === 0) {
+      console.error("Erreur Groq :", JSON.stringify(data));
+      return res.status(500).json({ error: "Réponse invalide de l'IA", details: data });
     }
 
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      console.error("Réponse non JSON :", text);
-      return res.status(500).json({ error: "Réponse non JSON de Hugging Face" });
-    }
-
-    const reply = data[0]?.generated_text || "Je n’ai pas compris votre demande.";
-
+    const reply = data.choices[0].message?.content || "Je n’ai pas compris votre demande.";
     res.json({ response: reply });
 
   } catch (e) {
@@ -64,4 +46,4 @@ Réponds comme un assistant Campus France RDC professionnel, poli et clair.`,
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ Serveur IA Campus France lancé sur le port ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Serveur lancé sur le port ${PORT}`));
