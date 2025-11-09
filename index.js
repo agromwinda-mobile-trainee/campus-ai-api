@@ -10,7 +10,7 @@ app.use(express.json());
 const HF_MODEL = "mistralai/Mistral-7B-Instruct-v0.2"; 
 
 // ✅ Endpoint officiel de l'API Hugging Face
-const HF_API_URL = `https://api-inference.huggingface.co/models/${HF_MODEL}`;
+const HF_API_URL = `https://router.huggingface.co/hf-inference/${HF_MODEL}`;
 
 app.post("/ask", async (req, res) => {
   try {
