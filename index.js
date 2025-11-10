@@ -3,7 +3,9 @@ import fetch from "node-fetch";
 import cors from "cors";
 import { initializeApp, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
-import serviceAccount from "./serviceAccountKey.json" assert { type: "json" };
+import fs from "fs";
+
+const serviceAccount = JSON.parse(fs.readFileSync("./serviceAccountKey.json", "utf8"));
 
 // 🔥 Initialisation Firebase Admin
 initializeApp({
@@ -53,7 +55,7 @@ Ne donne aucune autre réponse.
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
+        model: "llama-3.1-8b-instant",
         messages: [{ role: "user", content: moderationPrompt }],
         temperature: 0.1,
       }),
