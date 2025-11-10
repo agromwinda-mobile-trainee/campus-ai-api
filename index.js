@@ -26,13 +26,24 @@ app.post("/ask", async (req, res) => {
       return res.status(400).json({ error: "Message vide" });
     }
 
-    // 🧩 Sauvegarde du message de l'utilisateur
-    const msgRef = db.collection("messages").doc(userId).collection("chat").doc();
-    await msgRef.set({
-      sender: role,
-      message,
-      timestamp: new Date(),
-    });
+    // Vérifie que userId est valide
+if (!userId || typeof userId !== "string" || userId.trim() === "") {
+  console.error("❌ Erreur : userId invalide");
+  return res.status(400).json({ error: "Identifiant utilisateur manquant" });
+}
+
+// 🧩 Sauvegarde du message de l'utilisateur
+const msgRef = db
+  .collection("messages")
+  .doc(userId) // document parent correspondant à l'utilisateur
+  .collection("chat") // sous-collection chat
+  .doc(); // génère automatiquement un ID pour le message
+
+await msgRef.set({
+  sender: role || "user", // rôle par défaut "user"
+  message,
+  timestamp: new Date(),
+});
 
     // 🧠 Étape 1 — Déterminer si l'IA peut répondre ou non
     const moderationPrompt = `
